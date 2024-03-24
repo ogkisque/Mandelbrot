@@ -9,9 +9,8 @@ int main ()
 
     uint8_t* pixels = (uint8_t*) calloc (size_x * size_y * 4, sizeof (uint8_t));
 
-    get_pixels (&pixels);
+    print_mandel (&pixels);
     
-    SDL_Delay (5000);
     quit_graphic ();
     free (pixels);
     return 0;

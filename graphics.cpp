@@ -38,7 +38,7 @@ void init_graphic (const char* header, int size_x, int size_y)
                                 size_x);
 }
 
-void draw_pixel (int x, int y, int r_col, int g_col, int b_col)
+void draw_pixel (int x, int y, uint8_t r_col, uint8_t g_col, uint8_t b_col)
 {
     SDL_SetRenderDrawColor (renderer, r_col, g_col, b_col, 255);
     SDL_RenderDrawPoint (renderer, x, y);

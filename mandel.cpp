@@ -1,6 +1,55 @@
 #include "mandel.h"
 
-void get_pixels (uint8_t** pixels)
+void print_mandel       (uint8_t** pixels)
+{
+    SDL_Event event;
+    bool quit = false;
+    float scale = def_scale;
+    float offset_x = def_offset_x;
+    float offset_y = def_offset_y;
+
+    while (!quit)
+    {
+        
+        while (SDL_PollEvent(&event))
+        {
+            if (event.type == SDL_QUIT)
+            {
+                quit = true;
+            }
+            else if (event.type == SDL_KEYDOWN)
+            {
+                switch (event.key.keysym.sym)
+                {
+                    case (SDLK_UP):
+                        offset_y -= 5;
+                        break;
+                    case (SDLK_DOWN):
+                        offset_y += 5;
+                        break;
+                    case (SDLK_LEFT):
+                        offset_x -= 5;
+                        break;
+                    case (SDLK_RIGHT):
+                        offset_x += 5;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            else if (event.type == SDL_MOUSEWHEEL)
+            {
+                int amount {event.wheel.y};
+                scale -= (float) amount / 8;
+            }
+        }
+
+        update_pixels (pixels, scale, offset_x, offset_y);
+
+    }
+}
+
+void update_pixels (uint8_t** pixels, float scale, float offset_x, float offset_y)
 {
     lock_texture ((void**) pixels);
 
@@ -8,9 +57,6 @@ void get_pixels (uint8_t** pixels)
     int y = 0;
     float dx = 1 / (float) size_x;
     float dy = 1 / (float) size_y;
-    float scale = 2.2;
-    float offset_x = 50;
-    float offset_y = 0;
     int j = 0;
 
     for (y = 0; y < size_y; y++)
@@ -20,8 +66,6 @@ void get_pixels (uint8_t** pixels)
         for (x = 0; x < size_x; x++)
         {
             float x0 = ((float) x - (float) size_x / 2 - offset_x) * dx * scale;
-            float tmp_x = x0;
-            float tmp_y = y0;
             int i = 0;
 
             for (float tmp_x = x0, tmp_y = y0; i < max_cycles; i++)
@@ -38,23 +82,23 @@ void get_pixels (uint8_t** pixels)
 
             if (i == max_cycles)
             {
-                *(*pixels + j) = i % 170 + 20;
-                *(*pixels + j + 1) = i % 40 + 20;
-                *(*pixels + j + 2) = i % 30 + 30;
+                *(*pixels + j) = (uint8_t) i % 170 + 20;
+                *(*pixels + j + 1) = (uint8_t) i % 40 + 20;
+                *(*pixels + j + 2) = (uint8_t) i % 30 + 30;
             }
             else
             {
                 if (i % 2 == 1)
                 {
-                    *(*pixels + j) = i % 20 + 20;
-                    *(*pixels + j + 1) = i % 170 + 20;
-                    *(*pixels + j + 2) = i % 30 + 10;
+                    *(*pixels + j) = (uint8_t) i % 20 + 20;
+                    *(*pixels + j + 1) = (uint8_t) i % 170 + 20;
+                    *(*pixels + j + 2) = (uint8_t) i % 30 + 10;
                 }
                 else
                 {
-                    *(*pixels + j) = i % 170 + 20;
-                    *(*pixels + j + 1) = i % 30 + 20;
-                    *(*pixels + j + 2) = i % 20 + 20;
+                    *(*pixels + j) = (uint8_t) i % 170 + 20;
+                    *(*pixels + j + 1) = (uint8_t) i % 30 + 20;
+                    *(*pixels + j + 2) = (uint8_t) i % 20 + 20;
                 }
             }
 
