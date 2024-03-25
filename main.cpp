@@ -5,9 +5,9 @@
 
 int main ()
 {
-    init_graphic (header, size_x, size_y);
+    init_graphic (HEADER, SIZE_X, SIZE_Y);
 
-    uint8_t* pixels = (uint8_t*) calloc (size_x * size_y * 4, sizeof (uint8_t));
+    uint8_t* pixels = (uint8_t*) calloc (SIZE_X * SIZE_Y * 4, sizeof (uint8_t));
 
     print_mandel (&pixels);
     

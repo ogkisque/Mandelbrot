@@ -13,11 +13,12 @@ CFLAGS = -c -g -D _DEBUG -ggdb3 -std=c++17 -O0 -Wall -Wextra -Weffc++ -Waggressi
 OBJ = main.o mandel.o graphics.o
 SDL_FLAG = `pkg-config --cflags --libs sdl2`
 AVX_FLAG = -mavx2
+TTF_FLAG = -lSDL2_ttf
 
 all: mand.out
 
 mand.out: $(OBJ)
-	$(CC) $^ -o $@ $(SDL_FLAG)
+	$(CC) $^ -o $@ $(SDL_FLAG) $(TTF_FLAG)
 
 %.o: %.cpp
 	$(CC) $(CFLAGS) $(AVX_FLAG) $< $(SDL_FLAG)
