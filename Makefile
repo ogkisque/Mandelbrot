@@ -21,7 +21,7 @@ mand.out: $(OBJ)
 	$(CC) $^ -o $@ $(SDL_FLAG) $(TTF_FLAG)
 
 %.o: %.cpp
-	$(CC) $(CFLAGS) $(AVX_FLAG) $< $(SDL_FLAG)
+	$(CC) $(CFLAGS) $(AVX_FLAG) -O3 $< $(SDL_FLAG)
 
 .PHONY: clean all
 

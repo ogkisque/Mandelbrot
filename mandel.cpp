@@ -50,27 +50,38 @@ void print_mandel (uint8_t** pixels)
                 update_pixels_avx (pixels, scale, offset_x, offset_y);
             #else
                 update_pixels (pixels, scale, offset_x, offset_y);
-            #endif
-        #endif
+            #endif // AVX
+        #endif // CHECK_TICKS
         
     }
 }
 
 inline void update_pixels (uint8_t** pixels, float scale, float offset_x, float offset_y)
 {
-    lock_texture ((void**) pixels);
-
-    int x = 0;
-    int y = 0;
-    float dx = 1 / (float) SIZE_X;
-    float dy = 1 / (float) SIZE_Y;
-    int pixel_index = 0;
-
     Uint32 time0 = SDL_GetTicks ();
+
+    lock_texture ((void**) pixels);
+    calc_pixels (pixels, scale, offset_x, offset_y);
+    render_texture ();
+
+    Uint32 time1 = SDL_GetTicks ();
+
+    char fps[10] = "";
+    sprintf (fps, "FPS: %d", (int) (1000 / ((float) time1 - (float) time0)));
+    print_text (fps);
+}
+
+inline void calc_pixels (uint8_t** pixels, float scale, float offset_x, float offset_y)
+{
+    int     x = 0;
+    int     y = 0;
+    float   dx = 1 / (float) SIZE_X;
+    float   dy = 1 / (float) SIZE_Y;
+    int     pixel_index = 0;
 
     for (y = 0; y < SIZE_Y; y++)
     {
-        float y0 = ((float) y - (float) SIZE_Y / 2 - offset_y) * dy * scale;
+        float y0 = (- (float) y - (float) SIZE_Y / 2 - offset_y) * dy * scale;
 
         for (x = 0; x < SIZE_X; x++)
         {
@@ -93,7 +104,14 @@ inline void update_pixels (uint8_t** pixels, float scale, float offset_x, float 
             pixel_index += 4;
         }
     }
+}
 
+inline void update_pixels_avx (uint8_t** pixels, float scale, float offset_x, float offset_y)
+{
+    Uint32 time0 = SDL_GetTicks ();
+
+    lock_texture ((void**) pixels);
+    calc_pixels_avx (pixels, scale, offset_x, offset_y);
     render_texture ();
 
     Uint32 time1 = SDL_GetTicks ();
@@ -103,16 +121,12 @@ inline void update_pixels (uint8_t** pixels, float scale, float offset_x, float 
     print_text (fps);
 }
 
-inline void update_pixels_avx (uint8_t** pixels, float scale, float offset_x, float offset_y)
+inline void calc_pixels_avx (uint8_t** pixels, float scale, float offset_x, float offset_y)
 {
-    lock_texture ((void**) pixels);
-
-    int x               = 0;
-    int y               = 0;
-    __m256 r2_max_vec   = _mm256_set1_ps (R2_MAX);
-    int pixel_index     = 0;
-
-    Uint32 time0        = SDL_GetTicks ();
+    int     x               = 0;
+    int     y               = 0;
+    int     pixel_index     = 0;
+    __m256  r2_max_vec      = _mm256_set1_ps (R2_MAX);
 
     for (y = 0; y < SIZE_Y; y++)
     {
@@ -120,12 +134,12 @@ inline void update_pixels_avx (uint8_t** pixels, float scale, float offset_x, fl
 
         for (x = 0; x < SIZE_X; x += 8)
         {
-            __m256 x0           = _mm256_add_ps (_mm256_set_ps (7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.0f),
+            __m256  x0          = _mm256_add_ps (_mm256_set_ps (7.0f, 6.0f, 5.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.0f),
                                                  _mm256_set1_ps (((float) x - (float) SIZE_X / 2 - offset_x)));
 
-            x0                  = _mm256_mul_ps (x0, _mm256_set1_ps (scale / (float) SIZE_X));
-            int i               = 0;
+                    x0          = _mm256_mul_ps (x0, _mm256_set1_ps (scale / (float) SIZE_X));
             __m256i cmp_i       = _mm256_set1_epi32 (0);
+            int     i           = 0;
 
             for (__m256 tmp_x = x0, tmp_y = y0; i < MAX_CYCLES; i++)
             {
@@ -151,14 +165,6 @@ inline void update_pixels_avx (uint8_t** pixels, float scale, float offset_x, fl
             }
         }
     }
-    
-    render_texture ();
-
-    Uint32 time1 = SDL_GetTicks ();
-
-    char fps[10] = "";
-    sprintf (fps, "FPS: %d", (int) (1000 / ((float) time1 - (float) time0)));
-    print_text (fps);
 }
 
 inline void fill_pixel (uint8_t** pixels, int i, int pixel_index)
@@ -192,11 +198,12 @@ inline void check_ticks (uint8_t** pixels)
     unsigned long long tick0 = __rdtsc ();
 
     #ifdef AVX
-    update_pixels_avx (pixels, DEF_SCALE, DEF_OFFSET_X, DEF_OFFSET_Y);
+    calc_pixels_avx (pixels, DEF_SCALE, DEF_OFFSET_X, DEF_OFFSET_Y);
     #else
-    update_pixels (pixels, DEF_SCALE, DEF_OFFSET_X, DEF_OFFSET_Y);
+    calc_pixels (pixels, DEF_SCALE, DEF_OFFSET_X, DEF_OFFSET_Y);
     #endif
 
     unsigned long long tick1 = __rdtsc ();
     printf ("%llu\n", (tick1 - tick0) / NUM_TICK_TESTS);
 }
+
